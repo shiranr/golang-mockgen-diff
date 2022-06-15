@@ -105,19 +105,22 @@ func validateFiles(mockFiles map[string]fileData, projectFiles map[string]fileDa
 
 		defer originalFile.Close()
 
-		cmdScanner := bufio.NewScanner(originalFile)
 		match := false
+
+		cmdScanner := bufio.NewScanner(originalFile)
 		for cmdScanner.Scan() {
 			text := cmdScanner.Text()
 			if regex.MatchString(text) {
 				match = true
 				newFilePath := "./scripts/temp/" + originalFile.Name()
+
 				cmdRunner, err := buildAndCreateANewCommand(text, originalFile, newFilePath)
 				if err != nil {
 					errorsList.append("Failed to build command for mock validation", err)
 
 					continue
 				}
+
 				_, err = cmdRunner.Output()
 				if err != nil {
 					errorsList.append("Failed to read mockgen command from original file "+originalFile.Name(), err)
@@ -128,6 +131,7 @@ func validateFiles(mockFiles map[string]fileData, projectFiles map[string]fileDa
 				compareMocks(mockFileData, newFilePath)
 			}
 		}
+
 		if !match {
 			errorsList.append("Failed to get mockgen generating command from original file "+originalFile.Name(), err)
 
@@ -137,13 +141,15 @@ func validateFiles(mockFiles map[string]fileData, projectFiles map[string]fileDa
 }
 
 func buildAndCreateANewCommand(text string, originalFile *os.File, newFilePath string) (*exec.Cmd, error) {
+	var cmdNewArgs []string
+
 	cmd := strings.Split(text, " ")
 	if len(cmd) < 3 {
 		err := errors.New("Invalid mockgen generating command " + text + " from original file " + originalFile.Name())
 
 		return nil, err
 	}
-	var cmdNewArgs []string
+
 	for index, cmdArg := range cmd {
 		switch {
 		case index <= 1:
@@ -153,9 +159,10 @@ func buildAndCreateANewCommand(text string, originalFile *os.File, newFilePath s
 		case index == 3:
 			cmdNewArgs = append(cmdNewArgs, "-destination="+newFilePath)
 		}
-
 	}
+
 	cmdRunner := exec.Command("mockgen", cmdNewArgs...)
+
 	return cmdRunner, nil
 }
 

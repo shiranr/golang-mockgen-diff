@@ -12,6 +12,11 @@ func TestExtractFilesWithMocksSuccessfullyWithEnvVariable(t *testing.T) {
 	os.Setenv("PROJECT_PATH", "../")
 	extractFilesWithMocks(mockFiles, projectGoFiles)
 	assert.Len(t, mockFiles, 1)
+	for key, val := range mockFiles {
+		assert.Equal(t, key, "service_example_mock.go")
+		assert.Equal(t, val.fileName, "service_example_mock.go")
+		assert.Contains(t, val.path, "example/mock/service_example_mock.go")
+	}
 	assert.Len(t, projectGoFiles, 3)
 }
 
@@ -22,4 +27,6 @@ func TestExtractFilesWithMocksSuccessfullyWithDefaultPath(t *testing.T) {
 	extractFilesWithMocks(mockFiles, projectGoFiles)
 	assert.Len(t, mockFiles, 0)
 	assert.Len(t, projectGoFiles, 1)
+	assert.Equal(t, projectGoFiles["mockgen_validator.go"].fileName, "mockgen_validator.go")
+	assert.Equal(t, projectGoFiles["mockgen_validator.go"].path, "mockgen_validator.go")
 }

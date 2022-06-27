@@ -69,14 +69,21 @@ func main() {
 }
 
 func extractFilesWithMocks(mockFiles map[string]fileData, projectGoFiles map[string]fileData) {
-	err := filepath.Walk("./", func(path string, file os.FileInfo, err error) error {
-		if !file.IsDir() && strings.Contains(file.Name(), ".go") && !strings.Contains(file.Name(), "_test") {
-			projectGoFiles[file.Name()] = createFileData(path, file)
+	path := "./"
+	if envPath := os.Getenv("PROJECT_PATH"); envPath != "" {
+		path = envPath
+	}
+	err := filepath.Walk(path, func(path string, file os.FileInfo, err error) error {
+		if file.IsDir() && strings.Contains(file.Name(), "vendor") {
+			return filepath.SkipDir
 		}
 		if strings.Contains(file.Name(), "_mock.go") {
 			mockFiles[file.Name()] = createFileData(path, file)
+			return nil
 		}
-
+		if !file.IsDir() && strings.Contains(file.Name(), ".go") && !strings.Contains(file.Name(), "_test") {
+			projectGoFiles[file.Name()] = createFileData(path, file)
+		}
 		return nil
 	})
 
